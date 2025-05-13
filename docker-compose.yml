@@ -10,9 +10,12 @@ services:
     networks:
       - microservices-network
     depends_on:
-      - user-service
-      - product-service
-      - order-service
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
     restart: always
 
   # User Service
@@ -28,7 +31,8 @@ services:
     networks:
       - microservices-network
     depends_on:
-      - user-db
+      user-db:
+        condition: service_healthy
     restart: always
 
   # User Database (PostgreSQL)
@@ -43,6 +47,11 @@ services:
     networks:
       - microservices-network
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Product Service
   product-service:
@@ -54,7 +63,8 @@ services:
     networks:
       - microservices-network
     depends_on:
-      - product-db
+      product-db:
+        condition: service_healthy
     restart: always
 
   # Product Database (MongoDB)
@@ -65,6 +75,11 @@ services:
     networks:
       - microservices-network
     restart: always
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Order Service
   order-service:
@@ -76,7 +91,8 @@ services:
     networks:
       - microservices-network
     depends_on:
-      - order-db
+      order-db:
+        condition: service_healthy
     restart: always
 
   # Order Database (MongoDB)
@@ -87,6 +103,11 @@ services:
     networks:
       - microservices-network
     restart: always
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Prometheus for monitoring
   prometheus:
@@ -111,7 +132,8 @@ services:
     networks:
       - microservices-network
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
     restart: always
 
 networks:
