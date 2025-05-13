@@ -85,7 +85,7 @@ const orderSchema = new mongoose.Schema({
         method: String,
         transactionId: String,
     }
-}, { timestamp: true });
+}, { timestamps: true });
 
 const Order = mongoose.model('Order', orderSchema);
 
