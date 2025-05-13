@@ -122,13 +122,13 @@ app.post('/user/login', async (req, res) => {
         //? Find user
         const user = await User.findOne({ where: { username } });
         if (!user) {
-            return res.status(401).json({ message: 'Invaid username or password '});
+            return res.status(401).json({ message: 'Invalid username or password '});
         }
 
         //? Check password
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            return res.status(401).json({ message: 'Invaid username or password '});
+            return res.status(401).json({ message: 'Invalid username or password '});
         }
 
         //? Generate JWT
