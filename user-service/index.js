@@ -5,7 +5,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const winston = require('winston');
-const { use } = require('react');
 
 //? Load envionment variables
 dotenv.config();
