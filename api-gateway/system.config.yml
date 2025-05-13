@@ -1,0 +1,21 @@
+db:
+  redis:
+    emulate: true
+    namespace: express-gateway
+
+crypto:
+  cipherKey: ${CIPHER_KEY}
+  algorithm: aes256
+  saltRounds: 10
+
+session:
+  secret: ${SESSION_SECRET}
+  resave: false
+  saveUninitialized: false
+
+accessTokens:
+  timeToExpiry: 7200000
+
+plugins:
+  express-gateway-jwt:
+    package: express-gateway-plugin-jwt
