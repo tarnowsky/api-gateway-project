@@ -28,6 +28,10 @@ const logger = winston.createLogger({
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use((req, res, next) => {
+  console.log(`[user-service] ${req.method} ${req.url}`);
+  next();
+});
 
 //? Database connection
 const sequelize = new Sequelize(
@@ -89,7 +93,7 @@ app.get('/users/health', (req, res) => {
 });
 
 //? Register new user
-app.post('/user/register', async (req, res) => {
+app.post('/users/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
@@ -114,7 +118,7 @@ app.post('/user/register', async (req, res) => {
 });
 
 //? Login user
-app.post('/user/login', async (req, res) => {
+app.post('/users/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         
@@ -147,7 +151,7 @@ app.post('/user/login', async (req, res) => {
 });
 
 //? Get user profile
-app.get('users/profile', authenticationToken, async (req, res) => {
+app.get('/users/profile', authenticationToken, async (req, res) => {
     try {
         const user = await User.findByPk(req.user.id, {
             attributes: ['id', 'username', 'email']

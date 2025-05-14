@@ -1,14 +1,30 @@
+# Bazowy obraz
 FROM node:18-alpine
 
-WORKDIR /app
+# Instalacja globalna dla nodemon dla wygodniejszego developmentu
+RUN npm install -g nodemon
 
-# Install Express Gateway globally
-RUN npm install -g express-gateway
+# Ustawienie katalogu roboczego
+WORKDIR /usr/src/app
 
-# Copy configuration files
-COPY gateway.config.yml .
-COPY system.config.yml .
+# Kopiowanie plików package.json i package-lock.json
+COPY package*.json ./
 
-EXPOSE 8080 9876
+# Instalacja zależności
+RUN npm install
 
-CMD ["eg", "gateway", "start"]
+# Kopiowanie kodu źródłowego
+COPY . .
+
+# Utworzenie katalogu na logi
+RUN mkdir -p logs
+
+# Ustawienie zmiennych środowiskowych
+ENV NODE_ENV=production
+ENV PORT=8080
+
+# Ekspozycja portu
+EXPOSE 8080
+
+# Uruchomienie aplikacji
+CMD ["node", "index.js"]

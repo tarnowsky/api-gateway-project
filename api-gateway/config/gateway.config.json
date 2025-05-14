@@ -1,0 +1,31 @@
+{
+  "services": {
+    "user-service": {
+      "url": "http://user-service:3001",
+      "healthCheck": "/health"
+    },
+    "product-service": {
+      "url": "http://product-service:3002",
+      "healthCheck": "/health"
+    },
+    "order-service": {
+      "url": "http://order-service:3003",
+      "healthCheck": "/health"
+    }
+  },
+  "server": {
+    "port": 8080,
+    "timeout": 30000
+  },
+  "security": {
+    "jwtSecret": "ce739391c3849e7d97e7778b6e8ebc6f0369698ae8d1af761ae981e45cf350cd",
+    "apiKeys": []
+  },
+  "rateLimit": {
+    "windowMs": 90000,
+    "max": 100
+  },
+  "logging": {
+    "level": "info"
+  }
+}

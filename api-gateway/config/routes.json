@@ -1,0 +1,52 @@
+{
+  "routes": [
+    {
+      "path": "/users",
+      "service": "user-service",
+      "methods": ["GET", "POST", "PUT", "DELETE"],
+      "auth": true,
+      "rateLimit": true,
+      "forwardPath": "/users"
+    },
+    {
+      "path": "/users/profile",
+      "service": "user-service",
+      "methods": ["GET"],
+      "auth": true,
+      "rateLimit": true,
+      "forwardPath": "/users/profile"
+    },
+    {
+      "path": "/users/register",
+      "service": "user-service",
+      "methods": ["POST"],
+      "auth": false,
+      "rateLimit": true,
+      "forwardPath": "/users/register"
+    },
+    {
+      "path": "/users/login",
+      "service": "user-service",
+      "methods": ["POST"],
+      "auth": false,
+      "rateLimit": true,
+      "forwardPath": "/users/login"
+    },
+    {
+      "path": "/products",
+      "service": "product-service",
+      "methods": ["GET", "POST", "PUT", "DELETE"],
+      "auth": true,
+      "rateLimit": true,
+      "forwardPath": "/products"
+    },
+    {
+      "path": "/orders",
+      "service": "order-service",
+      "methods": ["GET", "POST", "PUT", "DELETE"],
+      "auth": true,
+      "rateLimit": true,
+      "forwardPath": "/orders"
+    }
+  ]
+}
