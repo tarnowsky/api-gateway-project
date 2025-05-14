@@ -188,7 +188,7 @@ app.patch('/orders/:id/status', authenticateToken, async (req, res) => {
     }
     
     //? Check if the order belongs to the requesting user
-    if (order.userId !== req.user.id) {
+    if (order.userId !== String(req.user.id)) {
       return res.status(403).json({ message: 'Access denied' });
     }
     

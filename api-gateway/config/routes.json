@@ -1,52 +1,84 @@
 {
-  "routes": [
-    {
-      "path": "/users",
-      "service": "user-service",
-      "methods": ["GET", "POST", "PUT", "DELETE"],
-      "auth": true,
-      "rateLimit": true,
-      "forwardPath": "/users"
-    },
-    {
-      "path": "/users/profile",
-      "service": "user-service",
-      "methods": ["GET"],
-      "auth": true,
-      "rateLimit": true,
-      "forwardPath": "/users/profile"
-    },
-    {
-      "path": "/users/register",
-      "service": "user-service",
-      "methods": ["POST"],
-      "auth": false,
-      "rateLimit": true,
-      "forwardPath": "/users/register"
-    },
-    {
-      "path": "/users/login",
-      "service": "user-service",
-      "methods": ["POST"],
-      "auth": false,
-      "rateLimit": true,
-      "forwardPath": "/users/login"
-    },
-    {
-      "path": "/products",
-      "service": "product-service",
-      "methods": ["GET", "POST", "PUT", "DELETE"],
-      "auth": true,
-      "rateLimit": true,
-      "forwardPath": "/products"
-    },
-    {
-      "path": "/orders",
-      "service": "order-service",
-      "methods": ["GET", "POST", "PUT", "DELETE"],
-      "auth": true,
-      "rateLimit": true,
-      "forwardPath": "/orders"
-    }
-  ]
+    "routes": [
+        {
+            "path": "/users",
+            "service": "user-service",
+            "methods": ["GET"],
+            "auth": true,
+            "rateLimit": true,
+            "forwardPath": "/users"
+        },
+        {
+            "path": "/users/profile",
+            "service": "user-service",
+            "methods": ["GET"],
+            "auth": true,
+            "rateLimit": true,
+            "forwardPath": "/users/profile"
+        },
+        {
+            "path": "/users/register",
+            "service": "user-service",
+            "methods": ["POST"],
+            "auth": false,
+            "rateLimit": true,
+            "forwardPath": "/users/register"
+        },
+        {
+            "path": "/users/login",
+            "service": "user-service",
+            "methods": ["POST"],
+            "auth": false,
+            "rateLimit": true,
+            "forwardPath": "/users/login"
+        },
+        {
+            "path": "/products",
+            "service": "product-service",
+            "methods": ["GET", "POST"],
+            "auth": true,
+            "rateLimit": true,
+            "forwardPath": "/products"
+        },
+        {
+            "path": "/products/:id",
+            "service": "product-service",
+            "methods": ["GET", "PUT", "DELETE"],
+            "auth": true,
+            "rateLimit": true,
+            "forwardPath": "/products/:id"
+        },
+        {
+            "path": "/orders",
+            "service": "order-service",
+            "methods": ["POST", "GET"],
+            "auth": true,
+            "rateLimit": true,
+            "forwardPath": "/orders"
+        },
+        {
+            "path": "/orders/:id",
+            "service": "order-service",
+            "methods": ["GET", "DELETE"],
+            "auth": true,
+            "rateLimit": true,
+            "forwardPath": "/orders"
+        },
+        {
+            "path": "/orders/:id/status",
+            "service": "order-service",
+            "methods": ["PATCH"],
+            "auth": true,
+            "rateLimit": true,
+            "forwardPath": null
+        },
+        {
+            "path": "/orders/stats/summary",
+            "service": "order-service",
+            "methods": ["GET"],
+            "auth": true,
+            "rateLimit": true,
+            "forwardPath": "/orders"
+        }
+    ]
 }
