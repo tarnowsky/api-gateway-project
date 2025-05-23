@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Microservices API</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .service-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-right: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .service-description {
+            color: #718096;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .endpoints {
+            space-y: 1rem;
+        }
+
+        .endpoint {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .endpoint:hover {
+            background: #edf2f7;
+            transform: translateX(5px);
+        }
+
+        .endpoint-method {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-right: 0.75rem;
+        }
+
+        .method-get { background: #48bb78; color: white; }
+        .method-post { background: #4299e1; color: white; }
+        .method-put { background: #ed8936; color: white; }
+        .method-patch { background: #9f7aea; color: white; }
+        .method-delete { background: #f56565; color: white; }
+
+        .endpoint-path {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .endpoint-desc {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .auth-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .auth-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .auth-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+
+        .code-example {
+            background: #1a202c;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .code-example pre {
+            margin: 0;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #48bb78;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-left: 1rem;
+        }
+
+        .gateway-info {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .services-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="hero fade-in">
+            <h1>🎓 University Microservices API</h1>
+            <p>A modern, scalable microservices architecture demonstrating cloud-native development practices with user management, product catalog, and order processing capabilities.</p>
+        </header>
+
+        <section class="gateway-info fade-in">
+            <h2 style="color: #2d3748; margin-bottom: 1rem; display: flex; align-items: center;">
+                <span style="font-size: 1.5rem; margin-right: 0.5rem;">🌐</span>
+                API Gateway
+                <span class="status-badge">Live</span>
+            </h2>
+            <p style="color: #718096; margin-bottom: 1rem;">All requests are routed through our API Gateway running on port 8080</p>
+            <div class="code-example">
+                <pre><code class="language-bash">Base URL: http://localhost:8080
+Rate Limit: 100 requests per 90 seconds
+Timeout: 30 seconds</code></pre>
+            </div>
+        </section>
+
+        <section class="auth-section fade-in">
+            <h2 class="auth-title">
+                <div class="auth-icon">🔐</div>
+                Authentication
+            </h2>
+            <p style="color: #718096; margin-bottom: 1rem;">Most endpoints require JWT authentication. Include the token in the Authorization header.</p>
+            <div class="code-example">
+                <pre><code class="language-bash"># Login to get token
+curl -X POST http://localhost:8080/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "your_username", "password": "your_password"}'
+
+# Use token in requests
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:8080/users/profile</code></pre>
+            </div>
+        </section>
+
+        <div class="services-grid">
+            <div class="service-card fade-in">
+                <div class="service-header">
+                    <div class="service-icon">👤</div>
+                    <div>
+                        <div class="service-title">User Service</div>
+                        <small style="color: #718096;">Port 3001</small>
+                    </div>
+                </div>
+                <p class="service-description">
+                    Handles user registration, authentication, and profile management with JWT token-based security.
+                </p>
+                <div class="endpoints">
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <span class="endpoint-path">/users/register</span>
+                        <div class="endpoint-desc">Register a new user account <span style="color: #48bb78;">• No Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <span class="endpoint-path">/users/login</span>
+                        <div class="endpoint-desc">Authenticate user and receive JWT token <span style="color: #48bb78;">• No Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/users/profile</span>
+                        <div class="endpoint-desc">Get current user profile <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/users</span>
+                        <div class="endpoint-desc">List all users (admin endpoint) <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card fade-in">
+                <div class="service-header">
+                    <div class="service-icon">📦</div>
+                    <div>
+                        <div class="service-title">Product Service</div>
+                        <small style="color: #718096;">Port 3002</small>
+                    </div>
+                </div>
+                <p class="service-description">
+                    Manages product catalog with full CRUD operations, filtering, and category management.
+                </p>
+                <div class="endpoints">
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/products</span>
+                        <div class="endpoint-desc">Get all products (supports category & stock filters) <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <span class="endpoint-path">/products</span>
+                        <div class="endpoint-desc">Create new product <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/products/:id</span>
+                        <div class="endpoint-desc">Get specific product details <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-put">PUT</span>
+                        <span class="endpoint-path">/products/:id</span>
+                        <div class="endpoint-desc">Update product <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-delete">DELETE</span>
+                        <span class="endpoint-path">/products/:id</span>
+                        <div class="endpoint-desc">Delete product <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card fade-in">
+                <div class="service-header">
+                    <div class="service-icon">🛒</div>
+                    <div>
+                        <div class="service-title">Order Service</div>
+                        <small style="color: #718096;">Port 3003</small>
+                    </div>
+                </div>
+                <p class="service-description">
+                    Handles order processing, status management, and provides order analytics with user-specific access control.
+                </p>
+                <div class="endpoints">
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <span class="endpoint-path">/orders</span>
+                        <div class="endpoint-desc">Create new order <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/orders</span>
+                        <div class="endpoint-desc">Get user's orders <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/orders/:id</span>
+                        <div class="endpoint-desc">Get specific order details <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-patch">PATCH</span>
+                        <span class="endpoint-path">/orders/:id/status</span>
+                        <div class="endpoint-desc">Update order status <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-delete">DELETE</span>
+                        <span class="endpoint-path">/orders/:id</span>
+                        <div class="endpoint-desc">Cancel order <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/orders/stats/summary</span>
+                        <div class="endpoint-desc">Get order statistics <span style="color: #f56565;">• Auth Required</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="features-grid fade-in">
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3 style="margin-bottom: 0.5rem; color: #2d3748;">Secure Authentication</h3>
+                <p style="color: #718096; font-size: 0.9rem;">JWT-based authentication with bcrypt password hashing</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 style="margin-bottom: 0.5rem; color: #2d3748;">Rate Limited</h3>
+                <p style="color: #718096; font-size: 0.9rem;">Built-in rate limiting for API protection</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3 style="margin-bottom: 0.5rem; color: #2d3748;">Monitoring Ready</h3>
+                <p style="color: #718096; font-size: 0.9rem;">Grafana & Prometheus integration for metrics</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🐳</div>
+                <h3 style="margin-bottom: 0.5rem; color: #2d3748;">Cloud Native</h3>
+                <p style="color: #718096; font-size: 0.9rem;">Docker-ready microservices architecture</p>
+            </div>
+        </section>
+
+        <footer style="text-align: center; margin-top: 3rem; color: rgba(255,255,255,0.8);">
+            <p>Built for University Cloud Computing Project • Demonstrating Modern Microservices Architecture</p>
+        </footer>
+    </div>
+
+    <script>
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate elements on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            document.querySelectorAll('.service-card, .auth-section, .gateway-info').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'all 0.6s ease';
+                observer.observe(el);
+            });
+
+            // Add click effects to endpoints
+            document.querySelectorAll('.endpoint').forEach(endpoint => {
+                endpoint.addEventListener('click', function() {
+                    this.style.transform = 'translateX(10px)';
+                    setTimeout(() => {
+                        this.style.transform = 'translateX(5px)';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

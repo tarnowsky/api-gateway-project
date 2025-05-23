@@ -18,6 +18,7 @@ const requestLogger = require('./middleware/requestLogger');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
 const metrics = require('./utils/metrics');
+const path = require('path');
 
 // Importy konfiguracji
 const gatewayConfig = require('./config/gateway.config.json');
@@ -44,6 +45,9 @@ app.use((req, res, next) => {
   console.log(`[gateway] ${req.method} ${req.originalUrl}`);
   next();
 });
+
+// Docs endpoint
+app.use('/docs', express.static(path.join(__dirname, 'public')));
 
 // Endpoint dla health check
 app.get('/health', (req, res) => {
