@@ -136,6 +136,7 @@ app.get('/products', async (req, res) => {
 // Get a specific product
 app.get('/products/:id', async (req, res) => {
   try {
+    console.log(req);
     const product = await Product.findById(req.params.id);
     
     if (!product) {

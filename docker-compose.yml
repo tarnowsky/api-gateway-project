@@ -48,6 +48,8 @@ services:
   # Product Service
   product-service:
     build: ./product-service
+    ports:
+      - "${PORT_PRODUCT}:${PORT_PRODUCT}"
     environment:
       - PORT=${PORT_PRODUCT}
       - MONGO_URI=${MONGO_URI_PRODUCT}
@@ -70,6 +72,8 @@ services:
   # Order Service
   order-service:
     build: ./order-service
+    ports:
+      - ${PORT_ORDER}:${PORT_ORDER}
     environment:
       - PORT=${PORT_ORDER}
       - MONGO_URI=${MONGO_URI_ORDER}

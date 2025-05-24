@@ -46,8 +46,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Docs endpoint
-app.use('/docs', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'test.html'));
+});
 
 // Endpoint dla health check
 app.get('/health', (req, res) => {

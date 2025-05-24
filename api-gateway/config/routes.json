@@ -46,7 +46,7 @@
             "methods": ["GET", "PUT", "DELETE"],
             "auth": true,
             "rateLimit": true,
-            "forwardPath": "/products/:id"
+            "forwardPath": null
         },
         {
             "path": "/orders",
@@ -78,7 +78,7 @@
             "methods": ["GET"],
             "auth": true,
             "rateLimit": true,
-            "forwardPath": "/orders"
+            "forwardPath": null
         }
     ]
 }
