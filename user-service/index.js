@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const winston = require('winston');
+const client = require('prom-client');
 
 //? Load envionment variables
 dotenv.config();
@@ -26,11 +27,23 @@ const logger = winston.createLogger({
 
 //? Initialize Express app
 const app = express();
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+const httpRequestCounter = new client.Counter({
+    name: 'userservice_http_requests_total', 
+    help: '...', 
+    labelNames: ['method', 'route', 'status_code'], 
+    registers: [register] 
+});
+
 app.use(express.json());
 app.use(cors());
+
 app.use((req, res, next) => {
-  console.log(`[user-service] ${req.method} ${req.url}`);
-  next();
+    res.on('finish', () => {
+        httpRequestCounter.inc({ method: req.method, route: req.path, status_code: res.statusCode });
+    });
+    next();
 });
 
 //? Database connection
@@ -77,7 +90,7 @@ const authenticationToken = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
         if (err) {
-            return res.status(403).json({ message: 'Invalid or expired token'});
+            return res.status(403).json({ message: 'Invalid or expired token' });
         }
         req.user = user;
         next();
@@ -87,7 +100,7 @@ const authenticationToken = (req, res, next) => {
 //? Health check endpoint
 app.get('/users/health', (req, res) => {
     res.status(200).json({
-        status: 'UP', 
+        status: 'UP',
         service: 'user-service',
     });
 });
@@ -101,7 +114,7 @@ app.post('/users/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
-            username, 
+            username,
             email,
             password: hashedPassword,
         });
@@ -121,17 +134,17 @@ app.post('/users/register', async (req, res) => {
 app.post('/users/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
+
         //? Find user
         const user = await User.findOne({ where: { username } });
         if (!user) {
-            return res.status(401).json({ message: 'Invalid username or password '});
+            return res.status(401).json({ message: 'Invalid username or password ' });
         }
 
         //? Check password
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            return res.status(401).json({ message: 'Invalid username or password '});
+            return res.status(401).json({ message: 'Invalid username or password ' });
         }
 
         //? Generate JWT
@@ -143,7 +156,7 @@ app.post('/users/login', async (req, res) => {
 
         logger.info(`User logged in: ${user.username}`);
         res.status(200).json({ token });
-        
+
     } catch (error) {
         logger.error(`Login error: ${error.message}`);
         res.status(400).json({ message: error.message });
@@ -180,6 +193,11 @@ app.get('/users', authenticationToken, async (req, res) => {
         logger.error(`User listing error: ${error.message}`);
         res.status(400).json({ message: error.message });
     }
+});
+
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
 });
 
 //? Initialize database and start server

@@ -34,20 +34,17 @@ register.registerMetric(httpRequestsTotal);
  * Middleware do mierzenia czasu żądań
  */
 function metricsMiddleware(req, res, next) {
-  const end = httpRequestDurationMicroseconds.startTimer();
-  
+  const end = httpRequestDurationMicroseconds.startTimer(); // prom-client handles duration calculation
+
   res.on('finish', () => {
-    const route = req.route ? req.route.path : req.path;
+    const routeLabel = req.matchedRoutePattern || (req.route ? req.route.path : req.originalUrl); // Fallback to originalUrl for clarity if no pattern
     const method = req.method;
     const statusCode = res.statusCode;
-    
-    // Zakończenie pomiaru czasu
-    end({ method, route, status_code: statusCode });
-    
-    // Inkrementacja licznika żądań
-    httpRequestsTotal.inc({ method, route, status_code: statusCode });
+
+    end({ method, route: routeLabel, status_code: statusCode }); // Pass labels to end()
+    httpRequestsTotal.inc({ method, route: routeLabel, status_code: statusCode });
   });
-  
+
   next();
 }
 

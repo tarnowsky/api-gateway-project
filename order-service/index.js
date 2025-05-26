@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const winston = require('winston');
+const client = require('prom-client');
 
 //? Load environment variables
 dotenv.config();
@@ -24,10 +25,22 @@ const logger = winston.createLogger({
   ]
 });
 
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+const httpRequestCounter = new client.Counter({ /* ... similar to api-gateway ... */ name: 'userservice_http_requests_total', help: '...', labelNames:['method', 'route', 'status_code'], registers: [register] });
+
+
 //? Initialize Express app
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+app.use((req, res, next) => {
+    res.on('finish', () => {
+        httpRequestCounter.inc({ method: req.method, route: req.path, status_code: res.statusCode });
+    });
+    next();
+});
 
 //? Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI || 'mongodb://order-db:27017/orderdb', {
@@ -276,6 +289,11 @@ app.get('/orders/stats/summary', authenticateToken, async (req, res) => {
 const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {
   logger.info(`Order service running on port ${PORT}`);
+});
+
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
 });
 
 module.exports = app; //? Export for testing

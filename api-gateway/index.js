@@ -6,12 +6,10 @@
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
-const cors = require('cors');
 const helmet = require('helmet');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 // Importy własnych middleware
-const corsMiddleware = require('./middleware/cors');
 const authMiddleware = require('./middleware/auth');
 const rateLimiterMiddleware = require('./middleware/rateLimiter');
 const requestLogger = require('./middleware/requestLogger');
@@ -34,17 +32,10 @@ const METRICS_PORT = process.env.METRICS_PORT || 9876;
 
 // Middleware podstawowe
 app.use(express.json())
-app.use((req, res, next) => {
-  console.log('[DEBUG] req.body:', req.body);
-  next();
-});
 app.use(helmet()); // Zabezpieczenia HTTP
 app.use(requestLogger); // Logowanie żądań
-app.use(metrics.metricsMiddleware); // Zbieranie metryk
-app.use((req, res, next) => {
-  console.log(`[gateway] ${req.method} ${req.originalUrl}`);
-  next();
-});
+// app.use(metrics.metricsMiddleware); // Zbieranie metryk
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -53,6 +44,95 @@ app.get('/test', (req, res) => {
 });
 
 // Endpoint dla health check
+
+
+// Funkcja konfigurująca trasy proxy do mikrousług
+function setupProxyRoutes() {
+  routes.routes.sort((a, b) => b.path.length - a.path.length);
+  routes.routes.forEach(routeConfig => { // Renamed 'route' to 'routeConfig' to avoid conflict
+    const { path: routePath, service, methods, auth, rateLimit, forwardPath } = routeConfig; // Renamed 'path' to 'routePath'
+    const serviceConfig = gatewayConfig.services[service];
+
+    if (!serviceConfig) {
+      logger.error(`Nieznana usługa: ${service}`);
+      return;
+    }
+
+    const routeSpecificMiddlewares = [];
+
+    // Middleware to set the matched route pattern for metrics
+    const metricsRouteSetter = (req, res, next) => {
+      req.matchedRoutePattern = routePath; // Store the matched path pattern
+      next();
+    };
+    routeSpecificMiddlewares.push(metricsRouteSetter);
+
+    // Add auth middleware if needed
+    if (auth) {
+      routeSpecificMiddlewares.push(authMiddleware);
+    }
+
+    // Add rate limiter if needed
+    if (rateLimit) {
+      routeSpecificMiddlewares.push(rateLimiterMiddleware);
+    }
+
+    // Add the actual metrics middleware now that req.matchedRoutePattern is set
+    routeSpecificMiddlewares.push(metrics.metricsMiddleware);
+
+    // Proxy configuration
+    const proxyOptions = {
+      target: serviceConfig.url,
+      changeOrigin: true,
+      pathRewrite: (originalPath) => { // 'originalPath' is the argument here
+        return forwardPath || originalPath;
+      },
+      logLevel: 'warn',
+      onProxyReq: (proxyReq, req, res) => {
+        proxyReq.setHeader('x-api-gateway', 'true');
+        if (req.user) {
+          proxyReq.setHeader('x-user-id', req.user.id);
+        }
+        if (req.body && Object.keys(req.body).length > 0) { // Check if body is not empty
+          const bodyData = JSON.stringify(req.body);
+          proxyReq.setHeader('Content-Type', 'application/json');
+          proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+          proxyReq.write(bodyData);
+        }
+      },
+      onError: (err, req, res) => {
+        logger.error(`Błąd proxy dla ${service}:`, err);
+        // Important: Ensure metrics are recorded even on proxy error
+        // If metricsMiddleware is not called before this, you might miss these errors.
+        // The current placement (in routeSpecificMiddlewares) should handle this.
+        if (!res.headersSent) {
+          res.status(502).json({
+            status: 'error',
+            message: 'Usługa jest niedostępna'
+          });
+        } else {
+          // If headers already sent, just end the response
+          res.end();
+        }
+      }
+    };
+
+    // Register route with middlewares and proxy
+    app.use(
+      routePath, // Use the original path for matching
+      ...routeSpecificMiddlewares,
+      createProxyMiddleware(proxyOptions)
+    );
+
+    logger.info(`Zarejestrowano trasę: ${routePath} -> ${serviceConfig.url}${forwardPath || routePath}`);
+  });
+}
+
+// Konfiguracja tras proxy
+setupProxyRoutes();
+
+app.use(metrics.metricsMiddleware);
+
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'up',
@@ -68,75 +148,6 @@ app.get('/', (req, res) => {
     services: Object.keys(gatewayConfig.services)
   });
 });
-
-// Funkcja konfigurująca trasy proxy do mikrousług
-function setupProxyRoutes() {
-  routes.routes.sort((a, b) => b.path.length - a.path.length);
-  routes.routes.forEach(route => {
-    const { path, service, methods, auth, rateLimit, forwardPath } = route;
-    const serviceConfig = gatewayConfig.services[service];
-    
-    if (!serviceConfig) {
-      logger.error(`Nieznana usługa: ${service}`);
-      return;
-    }
-
-    const middlewares = [];
-    
-    // Dodawanie middleware do uwierzytelniania jeśli potrzebne
-    if (auth) {
-      middlewares.push(authMiddleware);
-    }
-    
-    // Dodawanie rate limitera jeśli potrzebne
-    if (rateLimit) {
-      middlewares.push(rateLimiterMiddleware);
-    }
-    
-    // Konfiguracja proxy
-    const proxyOptions = {
-      target: serviceConfig.url,
-      changeOrigin: true,
-      pathRewrite: (path) => {
-        return forwardPath || path;
-      },
-      logLevel: 'warn',
-      onProxyReq: (proxyReq, req, res) => {
-        // Dodawanie nagłówków do żądania proxy
-        proxyReq.setHeader('x-api-gateway', 'true');
-        if (req.user) {
-          proxyReq.setHeader('x-user-id', req.user.id);
-        }
-        // Ręczne przekazanie body
-        if (req.body) {
-          const bodyData = JSON.stringify(req.body);
-          proxyReq.setHeader('Content-Type', 'application/json');
-          proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
-          proxyReq.write(bodyData);
-        }
-      },
-      onError: (err, req, res) => {
-        logger.error(`Błąd proxy dla ${service}:`, err);
-        res.status(502).json({
-          status: 'error',
-          message: 'Usługa jest niedostępna'
-        });
-      }
-    };
-    
-    // Rejestracja trasy z odpowiednimi middleware
-    app.use(
-      path,
-      ...middlewares,
-      createProxyMiddleware(proxyOptions)
-    );
-    
-    logger.info(`Zarejestrowano trasę: ${path} -> ${serviceConfig.url}${forwardPath || path}`);
-  });
-}
-
-// Konfiguracja tras proxy
-setupProxyRoutes();
 
 // Obsługa błędów
 app.use(errorHandler);

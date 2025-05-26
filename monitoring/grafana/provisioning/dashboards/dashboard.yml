@@ -1,11 +1,15 @@
+# monitoring/grafana/provisioning/dashboards/dashboard.yml
 apiVersion: 1
 
 providers:
-  - name: 'Default'
+  - name: 'Default Dashboards' # Give it a more descriptive name
     orgId: 1
-    folder: ''
+    folder: '' # Optional: specify a folder name in Grafana UI
     type: file
     disableDeletion: false
     editable: true
+    uid: 821d602a-5fae-4a9e-b8ef-b46d81dbdda2
     options:
-      path: /etc/grafana/provisioning/dashboards
+      # <path> is relative to grafana container workdir (/usr/share/grafana)
+      # or absolute path in grafana container filesystem.
+      path: /etc/grafana/provisioning/dashboards/ # This is where your JSON files will go

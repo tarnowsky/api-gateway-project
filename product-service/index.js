@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const winston = require('winston');
+const client = require('prom-client');
 
 // Load environment variables
 dotenv.config();
@@ -25,45 +26,57 @@ const logger = winston.createLogger({
 
 // Initialize Express app
 const app = express();
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+const httpRequestCounter = new client.Counter({ name: 'userservice_http_requests_total', help: '...', labelNames: ['method', 'route', 'status_code'], registers: [register] });
+
+
 app.use(express.json());
 app.use(cors());
+app.use((req, res, next) => {
+    res.on('finish', () => {
+        httpRequestCounter.inc({ method: req.method, route: req.path, status_code: res.statusCode });
+    });
+    next();
+});
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI || 'mongodb://product-db:27017/productdb', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => logger.info('Connected to MongoDB'))
-.catch(err => {
-  logger.error(`MongoDB connection error: ${err.message}`);
-  process.exit(1);
-});
+  .then(() => logger.info('Connected to MongoDB'))
+  .catch(err => {
+    logger.error(`MongoDB connection error: ${err.message}`);
+    process.exit(1);
+  });
 
 // Define Product schema
 const productSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: true 
+  name: {
+    type: String,
+    required: true
   },
-  description: { 
-    type: String, 
-    required: true 
+  description: {
+    type: String,
+    required: true
   },
-  price: { 
-    type: Number, 
+  price: {
+    type: Number,
     required: true,
     min: 0
   },
-  category: { 
-    type: String, 
-    required: true 
+  category: {
+    type: String,
+    required: true
   },
-  inStock: { 
-    type: Boolean, 
-    default: true 
+  inStock: {
+    type: Boolean,
+    default: true
   },
-  imageUrl: { 
-    type: String 
+  imageUrl: {
+    type: String
   }
 }, { timestamps: true });
 
@@ -73,11 +86,11 @@ const Product = mongoose.model('Product', productSchema);
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  
+
   if (!token) {
     return res.status(401).json({ message: 'Authentication token required' });
   }
-  
+
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
       return res.status(403).json({ message: 'Invalid or expired token' });
@@ -96,7 +109,7 @@ app.get('/products/health', (req, res) => {
 app.post('/products', authenticateToken, async (req, res) => {
   try {
     const { name, description, price, category, inStock, imageUrl } = req.body;
-    
+
     const product = new Product({
       name,
       description,
@@ -105,9 +118,9 @@ app.post('/products', authenticateToken, async (req, res) => {
       inStock,
       imageUrl
     });
-    
+
     await product.save();
-    
+
     logger.info(`Product created: ${name}`);
     res.status(201).json(product);
   } catch (error) {
@@ -121,10 +134,10 @@ app.get('/products', async (req, res) => {
   try {
     const { category, inStock } = req.query;
     let filter = {};
-    
+
     if (category) filter.category = category;
     if (inStock) filter.inStock = inStock === 'true';
-    
+
     const products = await Product.find(filter);
     res.status(200).json(products);
   } catch (error) {
@@ -138,11 +151,11 @@ app.get('/products/:id', async (req, res) => {
   try {
     console.log(req);
     const product = await Product.findById(req.params.id);
-    
+
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    
+
     res.status(200).json(product);
   } catch (error) {
     logger.error(`Product detail error: ${error.message}`);
@@ -158,11 +171,11 @@ app.put('/products/:id', authenticateToken, async (req, res) => {
       req.body,
       { new: true, runValidators: true }
     );
-    
+
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    
+
     logger.info(`Product updated: ${product.name}`);
     res.status(200).json(product);
   } catch (error) {
@@ -175,11 +188,11 @@ app.put('/products/:id', authenticateToken, async (req, res) => {
 app.delete('/products/:id', authenticateToken, async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
-    
+
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    
+
     logger.info(`Product deleted: ${product.name}`);
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (error) {
@@ -192,6 +205,11 @@ app.delete('/products/:id', authenticateToken, async (req, res) => {
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   logger.info(`Product service running on port ${PORT}`);
+});
+
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
 });
 
 module.exports = app; // Export for testing

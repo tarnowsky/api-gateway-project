@@ -9,7 +9,13 @@
         "test": "jest",
         "lint": "eslint ."
     },
-    "keywords": ["api", "gateway", "microservices", "express", "nodejs"],
+    "keywords": [
+        "api",
+        "gateway",
+        "microservices",
+        "express",
+        "nodejs"
+    ],
     "author": "",
     "license": "ISC",
     "dependencies": {
