@@ -8,7 +8,7 @@ providers:
     type: file
     disableDeletion: false
     editable: true
-    uid: 821d602a-5fae-4a9e-b8ef-b46d81dbdda2
+    # uid: my_prometheus_ds_001
     options:
       # <path> is relative to grafana container workdir (/usr/share/grafana)
       # or absolute path in grafana container filesystem.

@@ -24,7 +24,7 @@
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "821d602a-5fae-4a9e-b8ef-b46d81dbdda2"
+                "uid": "my_prometheus_ds_001"
             },
             "fieldConfig": {
                 "defaults": {
@@ -101,7 +101,7 @@
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "821d602a-5fae-4a9e-b8ef-b46d81dbdda2"
+                        "uid": "my_prometheus_ds_001"
                     },
                     "editorMode": "builder",
                     "expr": "sum(rate(http_requests_total{job='api-gateway'}[5m])) by (method, route)",
@@ -128,7 +128,7 @@
     "timepicker": {},
     "timezone": "",
     "title": "My Service Dashboard",
-    "uid": "821d602a-5fae-4a9e-b8ef-b46d81dbdda2",
+    "uid": "my_prometheus_ds_001",
     "version": 1,
     "weekStart": ""
 }
