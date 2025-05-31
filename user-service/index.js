@@ -27,20 +27,86 @@ const logger = winston.createLogger({
 
 //? Initialize Express app
 const app = express();
+
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });
+
 const httpRequestCounter = new client.Counter({
     name: 'userservice_http_requests_total', 
-    help: '...', 
+    help: 'Total number of requests', 
     labelNames: ['method', 'route', 'status_code'], 
     registers: [register] 
 });
+
+// Updated registration counter to match dashboard expectations
+const userRegistrationCounter = new client.Counter({
+    name: 'userservice_registrations_total',
+    help: 'Total number of user registrations',
+    labelNames: ['status'],
+    registers: [register]
+});
+
+// New: Login counter for dashboard
+const userLoginCounter = new client.Counter({
+    name: 'userservice_logins_total',
+    help: 'Total number of user logins',
+    labelNames: ['status'],
+    registers: [register]
+});
+
+const totalUsersGauge = new client.Gauge({
+    name: 'userservice_total_users',
+    help: 'Total number of registered users',
+    registers: [register]
+});
+
+// New: Active users gauge for dashboard
+const activeUsersGauge = new client.Gauge({
+    name: 'userservice_active_users',
+    help: 'Number of currently active users',
+    registers: [register]
+});
+
+// New: Unique request summary gauge for dashboard table
+const uniqueRequestsGauge = new client.Gauge({
+    name: 'userservice_unique_requests',
+    help: 'Unique request endpoints and their total counts',
+    labelNames: ['method', 'route'],
+    registers: [register]
+});
+
+// New: User info metric for dashboard table - using constant value 1 for each unique user
+const userInfoGauge = new client.Gauge({
+    name: 'userservice_users_info',
+    help: 'User information for dashboard display',
+    labelNames: ['a_id', 'b_login', 'c_email'],
+    registers: [register]
+});
+
+// Track active sessions and unique requests
+const activeSessions = new Set();
+const uniqueRequests = new Map(); // Track unique method+route combinations
+
+function updateUniqueRequestsGauge() {
+    uniqueRequestsGauge.reset();
+    for (const [routeKey, count] of uniqueRequests.entries()) {
+        const [method, route] = routeKey.split(' ', 2);
+        uniqueRequestsGauge.set({ method, route }, count);
+    }
+}
 
 app.use(express.json());
 app.use(cors());
 
 app.use((req, res, next) => {
     res.on('finish', () => {
+        const routeKey = `${req.method} ${req.path}`;
+        const currentCount = uniqueRequests.get(routeKey) || 0;
+        uniqueRequests.set(routeKey, currentCount + 1);
+        
+        // Update the gauge for dashboard display
+        updateUniqueRequestsGauge();
+        
         httpRequestCounter.inc({ method: req.method, route: req.path, status_code: res.statusCode });
     });
     next();
@@ -79,6 +145,38 @@ const User = sequelize.define('User', {
     }
 });
 
+async function updateTotalUsersGauge() {
+    try {
+        const count = await User.count();
+        totalUsersGauge.set(count);
+    } catch (error) {
+        logger.error(`Error updating total users gauge: ${error.message}`);
+    }
+}
+
+async function updateUserInfoMetrics() {
+    try {
+        const users = await User.findAll({
+            attributes: ['id', 'username', 'email'],
+            limit: 100 // Limit to prevent too many metrics
+        });
+        
+        // Clear existing user info metrics
+        userInfoGauge.reset();
+        
+        // Set metrics for each user with value 1 (just to show they exist)
+        users.forEach(user => {
+            userInfoGauge.set({ a_id: user.id.toString(), b_login: user.username, c_email: user.email }, 1);
+        });
+    } catch (error) {
+        logger.error(`Error updating user info metrics: ${error.message}`);
+    }
+}
+
+function updateActiveUsersGauge() {
+    activeUsersGauge.set(activeSessions.size);
+}
+
 //? Middleware to authenticate token
 const authenticationToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -93,6 +191,11 @@ const authenticationToken = (req, res, next) => {
             return res.status(403).json({ message: 'Invalid or expired token' });
         }
         req.user = user;
+        
+        // Track active session
+        activeSessions.add(user.id);
+        updateActiveUsersGauge();
+        
         next();
     });
 }
@@ -119,12 +222,20 @@ app.post('/users/register', async (req, res) => {
             password: hashedPassword,
         });
 
+        // Increment success counter and update gauges
+        userRegistrationCounter.inc({ status: 'success' });
+        await updateTotalUsersGauge();
+        await updateUserInfoMetrics();
+
         logger.info(`User registered ${username}`);
         res.status(201).json({
             message: 'User registered successfully',
             userId: user.id,
         })
     } catch (error) {
+        // Increment failure counter
+        userRegistrationCounter.inc({ status: 'failed' });
+        
         logger.error(`Registration error: ${error.message}`);
         res.status(400).json({ message: error.message });
     }
@@ -138,12 +249,14 @@ app.post('/users/login', async (req, res) => {
         //? Find user
         const user = await User.findOne({ where: { username } });
         if (!user) {
+            userLoginCounter.inc({ status: 'failed' });
             return res.status(401).json({ message: 'Invalid username or password ' });
         }
 
         //? Check password
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
+            userLoginCounter.inc({ status: 'failed' });
             return res.status(401).json({ message: 'Invalid username or password ' });
         }
 
@@ -154,11 +267,32 @@ app.post('/users/login', async (req, res) => {
             { expiresIn: '2h' },
         );
 
+        // Increment success counter and track active session
+        userLoginCounter.inc({ status: 'success' });
+        activeSessions.add(user.id);
+        updateActiveUsersGauge();
+
         logger.info(`User logged in: ${user.username}`);
         res.status(200).json({ token });
 
     } catch (error) {
+        userLoginCounter.inc({ status: 'failed' });
         logger.error(`Login error: ${error.message}`);
+        res.status(400).json({ message: error.message });
+    }
+});
+
+//? Logout endpoint (optional - to properly track active users)
+app.post('/users/logout', authenticationToken, (req, res) => {
+    try {
+        // Remove from active sessions
+        activeSessions.delete(req.user.id);
+        updateActiveUsersGauge();
+        
+        logger.info(`User logged out: ${req.user.username}`);
+        res.status(200).json({ message: 'Logged out successfully' });
+    } catch (error) {
+        logger.error(`Logout error: ${error.message}`);
         res.status(400).json({ message: error.message });
     }
 });
@@ -200,11 +334,21 @@ app.get('/metrics', async (req, res) => {
     res.end(await register.metrics());
 });
 
+// Clean up inactive sessions periodically
+setInterval(() => {
+    // This is a simple cleanup - in production you'd want more sophisticated session management
+    // For now, we'll just keep sessions active for demonstration
+}, 300000); // 5 minutes
+
 //? Initialize database and start server
 (async () => {
     try {
         await sequelize.sync();
         logger.info('Database synchronized');
+
+        await updateTotalUsersGauge();
+        await updateUserInfoMetrics();
+        logger.info('Metrics initialized');
 
         const PORT = process.env.PORT || 3001;
         app.listen(PORT, () => {

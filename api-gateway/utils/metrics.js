@@ -1,74 +1,134 @@
-/**
- * Konfiguracja metryki dla prometheus
- */
-const promClient = require('prom-client');
-const express = require('express');
-const logger = require('./logger');
+const client = require('prom-client');
 
-// Utworzenie rejestru metryki
-const register = new promClient.Registry();
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
 
-// Dodanie domyślnych metryk
-promClient.collectDefaultMetrics({ register });
-
-// Konfiguracja licznika żądań HTTP
-const httpRequestDurationMicroseconds = new promClient.Histogram({
-  name: 'http_request_duration_seconds',
-  help: 'Czas trwania żądań HTTP w sekundach',
-  labelNames: ['method', 'route', 'status_code'],
-  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10]
+// Existing request duration histogram
+const httpDuration = new client.Histogram({
+    name: 'http_request_duration_seconds',
+    help: 'Duration of HTTP requests in seconds',
+    labelNames: ['method', 'route', 'status_code'],
+    buckets: [0.1, 0.5, 1, 2, 5],
+    registers: [register]
 });
 
-// Konfiguracja licznika żądań
-const httpRequestsTotal = new promClient.Counter({
-  name: 'http_requests_total',
-  help: 'Łączna liczba żądań HTTP',
-  labelNames: ['method', 'route', 'status_code']
+// Existing HTTP request counter - updated to match dashboard expectations
+const httpRequestCounter = new client.Counter({
+    name: 'http_requests_total',
+    help: 'Total number of HTTP requests',
+    labelNames: ['method', 'route', 'status_code', 'job', 'instance'],
+    registers: [register]
 });
 
-// Rejestracja metryk
-register.registerMetric(httpRequestDurationMicroseconds);
-register.registerMetric(httpRequestsTotal);
+// Unique request summary gauge for dashboard table
+const uniqueRequestsGauge = new client.Gauge({
+    name: 'api_gateway_unique_requests',
+    help: 'Unique request endpoints and their total counts',
+    labelNames: ['method', 'route'],
+    registers: [register]
+});
 
-/**
- * Middleware do mierzenia czasu żądań
- */
-function metricsMiddleware(req, res, next) {
-  const end = httpRequestDurationMicroseconds.startTimer(); // prom-client handles duration calculation
+// Track unique requests to avoid duplicates in dashboard
+const uniqueRequests = new Map();
 
-  res.on('finish', () => {
-    const routeLabel = req.matchedRoutePattern || (req.route ? req.route.path : req.originalUrl); // Fallback to originalUrl for clarity if no pattern
-    const method = req.method;
-    const statusCode = res.statusCode;
-
-    end({ method, route: routeLabel, status_code: statusCode }); // Pass labels to end()
-    httpRequestsTotal.inc({ method, route: routeLabel, status_code: statusCode });
-  });
-
-  next();
+function updateUniqueRequestsGauge() {
+    uniqueRequestsGauge.reset();
+    for (const [routeKey, count] of uniqueRequests.entries()) {
+        const [method, route] = routeKey.split(' ', 2);
+        uniqueRequestsGauge.set({ method, route }, count);
+    }
 }
 
-/**
- * Funkcja tworząca endpoint dla metryk
- */
-function createMetricsEndpoint(app, path = '/metrics') {
-  app.get(path, async (req, res) => {
-    try {
-      res.set('Content-Type', register.contentType);
-      res.end(await register.metrics());
-    } catch (err) {
-      logger.error('Błąd podczas generowania metryk', err);
-      res.status(500).end();
+// New: Registration-specific metrics at gateway level
+const registrationRequestCounter = new client.Counter({
+    name: 'api_gateway_registration_requests_total',
+    help: 'Total registration requests through API Gateway',
+    labelNames: ['status_code', 'upstream_service'],
+    registers: [register]
+});
+
+const registrationDuration = new client.Histogram({
+    name: 'api_gateway_registration_duration_seconds',
+    help: 'Duration of registration requests through API Gateway',
+    labelNames: ['status_code', 'upstream_service'],
+    buckets: [0.5, 1, 2, 5, 10],
+    registers: [register]
+});
+
+// Middleware for general HTTP metrics
+function metricsMiddleware(req, res, next) {
+    const end = httpDuration.startTimer();
+
+    res.on('finish', () => {
+        const routeLabel = req.matchedRoutePattern || (req.route ? req.route.path : req.originalUrl);
+        const method = req.method;
+        const statusCode = res.statusCode;
+        
+        // Track unique requests
+        const routeKey = `${method} ${routeLabel}`;
+        const currentCount = uniqueRequests.get(routeKey) || 0;
+        uniqueRequests.set(routeKey, currentCount + 1);
+        
+        // Update gauge for dashboard table
+        updateUniqueRequestsGauge();
+        
+        // Add job and instance labels for dashboard compatibility
+        const labels = { 
+            method, 
+            route: routeLabel, 
+            status_code: statusCode,
+            job: 'api-gateway',
+            instance: process.env.INSTANCE_NAME || `${require('os').hostname()}:${process.env.PORT || 3000}`
+        };
+
+        end({ method, route: routeLabel, status_code: statusCode });
+        httpRequestCounter.inc(labels);
+    });
+
+    next();
+}
+
+// Middleware specifically for registration requests
+function registrationMetricsMiddleware(req, res, next) {
+    const isRegistrationRoute = req.originalUrl.includes('/register') || req.originalUrl.includes('/signup');
+    
+    if (!isRegistrationRoute) {
+        return next();
     }
-  });
-  
-  logger.info(`Endpoint metryk dostępny pod adresem: ${path}`);
+
+    const end = registrationDuration.startTimer();
+
+    res.on('finish', () => {
+        const statusCode = res.statusCode;
+        const upstreamService = 'user-service'; // or dynamically determine this
+        
+        end({ status_code: statusCode, upstream_service: upstreamService });
+        registrationRequestCounter.inc({ status_code: statusCode, upstream_service: upstreamService });
+    });
+
+    next();
+}
+
+// Create metrics endpoint
+function createMetricsEndpoint(app, path = '/metrics') {
+    app.get(path, async (req, res) => {
+        try {
+            res.set('Content-Type', register.contentType);
+            res.end(await register.metrics());
+        } catch (err) {
+            console.error('Error generating metrics:', err);
+            res.status(500).end();
+        }
+    });
 }
 
 module.exports = {
-  register,
-  metricsMiddleware,
-  createMetricsEndpoint,
-  httpRequestDurationMicroseconds,
-  httpRequestsTotal
+    register,
+    metricsMiddleware,
+    registrationMetricsMiddleware,
+    createMetricsEndpoint,
+    httpDuration,
+    httpRequestCounter,
+    registrationRequestCounter,
+    registrationDuration
 };

@@ -1,15 +1,11 @@
-# monitoring/grafana/provisioning/dashboards/dashboard.yml
 apiVersion: 1
 
 providers:
-  - name: 'Default Dashboards' # Give it a more descriptive name
+  - name: 'Microservices Dashboards'
     orgId: 1
-    folder: '' # Optional: specify a folder name in Grafana UI
+    folder: 'Microservices'
     type: file
     disableDeletion: false
     editable: true
-    # uid: my_prometheus_ds_001
     options:
-      # <path> is relative to grafana container workdir (/usr/share/grafana)
-      # or absolute path in grafana container filesystem.
-      path: /etc/grafana/provisioning/dashboards/ # This is where your JSON files will go
+      path: /etc/grafana/provisioning/dashboards

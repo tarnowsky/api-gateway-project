@@ -34,7 +34,6 @@ const METRICS_PORT = process.env.METRICS_PORT || 9876;
 app.use(express.json())
 app.use(helmet()); // Zabezpieczenia HTTP
 app.use(requestLogger); // Logowanie żądań
-// app.use(metrics.metricsMiddleware); // Zbieranie metryk
 
 
 app.use(express.static(path.join(__dirname, 'public')));

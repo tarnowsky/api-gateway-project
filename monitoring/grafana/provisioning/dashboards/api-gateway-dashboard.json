@@ -74,17 +74,18 @@
                                 "value": 80
                             }
                         ]
-                    }
+                    },
+                    "unit": "reqps"
                 },
                 "overrides": []
             },
             "gridPos": {
-                "h": 9,
-                "w": 12,
+                "h": 8,
+                "w": 24,
                 "x": 0,
                 "y": 0
             },
-            "id": 2,
+            "id": 1,
             "options": {
                 "legend": {
                     "calcs": [],
@@ -103,7 +104,7 @@
                         "type": "prometheus",
                         "uid": "my_prometheus_ds_001"
                     },
-                    "editorMode": "builder",
+                    "editorMode": "code",
                     "expr": "sum(rate(http_requests_total{job='api-gateway'}[5m])) by (method, route)",
                     "legendFormat": "{{method}} {{route}}",
                     "range": true,
@@ -112,23 +113,108 @@
             ],
             "title": "API Gateway Request Rate",
             "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "my_prometheus_ds_001"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "auto"
+                        },
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 8
+            },
+            "id": 2,
+            "options": {
+                "cellHeight": "sm",
+                "footer": {
+                    "countRows": false,
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "my_prometheus_ds_001"
+                    },
+                    "editorMode": "code",
+                    "expr": "api_gateway_unique_requests",
+                    "format": "table",
+                    "legendFormat": "__auto",
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "Unique Endpoints - Total Requests",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "__name__": true,
+                            "job": true,
+                            "instance": true
+                        },
+                        "indexByName": {},
+                        "renameByName": {
+                            "Value": "Total Requests",
+                            "method": "Method",
+                            "route": "Route"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
         }
     ],
-    "refresh": "",
+    "refresh": "30s",
     "schemaVersion": 37,
     "style": "dark",
-    "tags": [],
+    "tags": ["api-gateway", "gateway"],
     "templating": {
         "list": []
     },
     "time": {
-        "from": "now-1h",
+        "from": "now-6h",
         "to": "now"
     },
     "timepicker": {},
     "timezone": "",
-    "title": "My Service Dashboard",
-    "uid": "my_prometheus_ds_001",
-    "version": 1,
+    "title": "API Gateway Dashboard",
+    "uid": "api-gateway-dashboard",
+    "version": 2,
     "weekStart": ""
 }
