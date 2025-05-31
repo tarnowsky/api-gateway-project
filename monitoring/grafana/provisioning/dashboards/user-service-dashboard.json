@@ -76,8 +76,8 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 8,
-                "w": 12,
+                "h": 11,
+                "w": 24,
                 "x": 0,
                 "y": 0
             },
@@ -120,144 +120,6 @@
             ],
             "title": "Registration & Login Rate",
             "type": "timeseries"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "my_prometheus_ds_001"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
-                                "color": "#EAB839",
-                                "value": 1000
-                            },
-                            {
-                                "color": "red",
-                                "value": 10000
-                            }
-                        ]
-                    },
-                    "unit": "none"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 6,
-                "x": 12,
-                "y": 0
-            },
-            "id": 2,
-            "options": {
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "showThresholdLabels": false,
-                "showThresholdMarkers": true,
-                "text": {}
-            },
-            "pluginVersion": "9.5.2",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "my_prometheus_ds_001"
-                    },
-                    "editorMode": "code",
-                    "expr": "userservice_total_users",
-                    "legendFormat": "Registered Users",
-                    "range": false,
-                    "refId": "A"
-                }
-            ],
-            "title": "Total Registered Users",
-            "type": "gauge"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "my_prometheus_ds_001"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
-                                "color": "#EAB839",
-                                "value": 100
-                            },
-                            {
-                                "color": "red",
-                                "value": 500
-                            }
-                        ]
-                    },
-                    "unit": "none"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 6,
-                "x": 18,
-                "y": 0
-            },
-            "id": 3,
-            "options": {
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "showThresholdLabels": false,
-                "showThresholdMarkers": true,
-                "text": {}
-            },
-            "pluginVersion": "9.5.2",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "my_prometheus_ds_001"
-                    },
-                    "editorMode": "code",
-                    "expr": "userservice_active_users",
-                    "legendFormat": "Active Users",
-                    "range": false,
-                    "refId": "A"
-                }
-            ],
-            "title": "Active Users",
-            "type": "gauge"
         },
         {
             "datasource": {
@@ -351,10 +213,10 @@
                 ]
             },
             "gridPos": {
-                "h": 11,
+                "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 8
+                "y": 11
             },
             "id": 4,
             "options": {
@@ -405,6 +267,144 @@
                 }
             ],
             "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "my_prometheus_ds_001"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "#EAB839",
+                                "value": 1000
+                            },
+                            {
+                                "color": "red",
+                                "value": 10000
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 6,
+                "x": 12,
+                "y": 11
+            },
+            "id": 2,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "text": {}
+            },
+            "pluginVersion": "9.5.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "my_prometheus_ds_001"
+                    },
+                    "editorMode": "code",
+                    "expr": "userservice_total_users",
+                    "legendFormat": "Registered Users",
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "Total Registered Users",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "my_prometheus_ds_001"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "#EAB839",
+                                "value": 100
+                            },
+                            {
+                                "color": "red",
+                                "value": 500
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 6,
+                "x": 18,
+                "y": 11
+            },
+            "id": 3,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "text": {}
+            },
+            "pluginVersion": "9.5.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "my_prometheus_ds_001"
+                    },
+                    "editorMode": "code",
+                    "expr": "userservice_active_users",
+                    "legendFormat": "Active Users",
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "Active Users",
+            "type": "gauge"
         }
     ],
     "refresh": "5s",
@@ -422,6 +422,6 @@
     "timezone": "",
     "title": "User Service Dashboard",
     "uid": "user-service-dashboard",
-    "version": 2,
+    "version": 6,
     "weekStart": ""
 }
