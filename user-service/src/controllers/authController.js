@@ -6,11 +6,9 @@ class AuthController {
         try {
             const result = await authService.register(req.body);
             
-            userRegistrationCounter.inc({ status: 'success' });
             
             res.status(201).json(result);
         } catch (error) {
-            userRegistrationCounter.inc({ status: 'failed' });
             logger.error(`Registration error: ${error.message}`);
             res.status(400).json({ message: error.message });
         }
