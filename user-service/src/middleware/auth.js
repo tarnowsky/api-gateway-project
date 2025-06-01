@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const metricsService = require('../services/metricsService');
 
 const authenticationToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -14,9 +13,6 @@ const authenticationToken = (req, res, next) => {
             return res.status(403).json({ message: 'Invalid or expired token' });
         }
         req.user = user;
-        
-        // Track active session
-        metricsService.addActiveSession(user.id);
         
         next();
     });

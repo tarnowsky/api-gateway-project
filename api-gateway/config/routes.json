@@ -1,6 +1,27 @@
 {
     "routes": [
         {
+            "path": "/users/health",
+            "service": "user-service",
+            "methods": ["GET"],
+            "auth": false,
+            "rateLimit": true
+        },
+        {
+            "path": "/products/health",
+            "service": "product-service",
+            "methods": ["GET"],
+            "auth": false,
+            "rateLimit": true
+        },
+        {
+            "path": "/orders/health",
+            "service": "order-service",
+            "methods": ["GET"],
+            "auth": false,
+            "rateLimit": true
+        },
+        {
             "path": "/users",
             "service": "user-service",
             "methods": ["GET"],
@@ -45,6 +66,22 @@
             "service": "product-service",
             "methods": ["GET", "PUT", "DELETE"],
             "auth": true,
+            "rateLimit": true,
+            "forwardPath": null
+        },
+        {
+            "path": "/products/metrics/stats",
+            "service": "product-service",
+            "methods": ["GET", "PUT", "DELETE"],
+            "auth": false,
+            "rateLimit": true,
+            "forwardPath": null
+        },
+        {
+            "path": "/products/dashboard",
+            "service": "product-service",
+            "methods": ["GET", "PUT", "DELETE"],
+            "auth": false,
             "rateLimit": true,
             "forwardPath": null
         },

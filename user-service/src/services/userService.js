@@ -26,12 +26,6 @@ class UserService {
         return await User.count();
     }
     
-    async getUsersForMetrics(limit = 100) {
-        return await User.findAll({
-            attributes: ['id', 'username', 'email'],
-            limit
-        });
-    }
 }
 
 module.exports = new UserService();

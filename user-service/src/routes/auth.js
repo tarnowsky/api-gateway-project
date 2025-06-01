@@ -4,19 +4,19 @@ const { authenticationToken } = require('../middleware/auth');
 const { 
     validateRegistration, 
     validateLogin, 
-    sanitizeInput 
+    validateRequestBody 
 } = require('../middleware/validation');
 
 const router = express.Router();
 
 router.post('/register', 
-    sanitizeInput, 
+    validateRequestBody, 
     validateRegistration, 
     authController.register
 );
 
 router.post('/login', 
-    sanitizeInput, 
+    validateRequestBody, 
     validateLogin, 
     authController.login
 );

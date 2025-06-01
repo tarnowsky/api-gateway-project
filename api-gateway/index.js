@@ -101,9 +101,11 @@ function setupProxyRoutes() {
       },
       onError: (err, req, res) => {
         logger.error(`Błąd proxy dla ${service}:`, err);
+
+        // Record proxy error for metrics
+        metrics.recordProxyError(service, err.code || 'unknown');
+
         // Important: Ensure metrics are recorded even on proxy error
-        // If metricsMiddleware is not called before this, you might miss these errors.
-        // The current placement (in routeSpecificMiddlewares) should handle this.
         if (!res.headersSent) {
           res.status(502).json({
             status: 'error',
@@ -129,6 +131,8 @@ function setupProxyRoutes() {
 
 // Konfiguracja tras proxy
 setupProxyRoutes();
+
+metrics.startServiceHealthCheck(gatewayConfig.services);
 
 app.use(metrics.metricsMiddleware);
 

@@ -28,17 +28,9 @@ const logger = winston.createLogger({
 const app = express();
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });
-const httpRequestCounter = new client.Counter({ name: 'userservice_http_requests_total', help: '...', labelNames: ['method', 'route', 'status_code'], registers: [register] });
-
 
 app.use(express.json());
 app.use(cors());
-app.use((req, res, next) => {
-    res.on('finish', () => {
-        httpRequestCounter.inc({ method: req.method, route: req.path, status_code: res.statusCode });
-    });
-    next();
-});
 
 
 // Connect to MongoDB
@@ -82,6 +74,8 @@ const productSchema = new mongoose.Schema({
 
 const Product = mongoose.model('Product', productSchema);
 
+
+
 // Middleware to authenticate token
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -120,7 +114,6 @@ app.post('/products', authenticateToken, async (req, res) => {
     });
 
     await product.save();
-
     logger.info(`Product created: ${name}`);
     res.status(201).json(product);
   } catch (error) {
@@ -149,7 +142,6 @@ app.get('/products', async (req, res) => {
 // Get a specific product
 app.get('/products/:id', async (req, res) => {
   try {
-    console.log(req);
     const product = await Product.findById(req.params.id);
 
     if (!product) {
@@ -176,6 +168,7 @@ app.put('/products/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+
     logger.info(`Product updated: ${product.name}`);
     res.status(200).json(product);
   } catch (error) {
@@ -201,15 +194,16 @@ app.delete('/products/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Prometheus metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
+
 // Start server
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   logger.info(`Product service running on port ${PORT}`);
-});
-
-app.get('/metrics', async (req, res) => {
-    res.set('Content-Type', register.contentType);
-    res.end(await register.metrics());
 });
 
 module.exports = app; // Export for testing

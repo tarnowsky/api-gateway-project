@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const routes = require('./src/routes');
-const { metricsMiddleware } = require('./src/middleware/metrics');
 const logger = require('./src/config/logger');
 
 // Load environment variables
@@ -14,7 +13,6 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors());
-app.use(metricsMiddleware);
 
 // Routes
 app.use('/', routes);

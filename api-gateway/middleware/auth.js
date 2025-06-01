@@ -4,6 +4,8 @@
 const jwt = require('jsonwebtoken');
 const gatewayConfig = require('../config/gateway.config.json');
 const logger = require('../utils/logger');
+const metrics = require('../utils/metrics');
+
 
 /**
  * Lista publicznych tras, które nie wymagają uwierzytelnienia
@@ -44,10 +46,14 @@ function authMiddleware(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || gatewayConfig.security.jwtSecret);
     // Dodanie danych użytkownika do obiektu żądania
     req.user = decoded;
+
+    metrics.recordAuthAttempt('success', requestPath);
     
     next();
   } catch (error) {
     logger.error('Błąd weryfikacji tokenu JWT:', error.message);
+
+    metrics.recordAuthAttempt('failure', requestPath);
     
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
