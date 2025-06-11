@@ -2,17 +2,18 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package.json package-lock*.json ./
+# Skopiuj shared logger (bez instalacji dependencies)
+COPY shared/logger /shared/logger
+
+# Zainstaluj dependencies głównej aplikacji (tu jest winston)
+COPY order-service/package*.json ./
 RUN npm install
 
-# Create logs directory
+# Utworzenie katalogu na logi
 RUN mkdir -p logs
 
-# Copy application code
-COPY . .
+# Kopiuj kod aplikacji order-service
+COPY order-service/ .
 
-# Expose the service port
-EXPOSE 3003
-
+EXPOSE ${PORT_ORDER}
 CMD ["npm", "start"]

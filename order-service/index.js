@@ -11,19 +11,8 @@ const client = require('prom-client');
 dotenv.config();
 
 //? Setup logger
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'order-service' },
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' })
-  ]
-});
+const { createLogger } = require('/shared/logger');
+const logger = createLogger(winston, 'order-service');
 
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });

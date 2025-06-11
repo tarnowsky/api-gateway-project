@@ -12,7 +12,9 @@ services:
       restart: always
   # API Gateway
   api-gateway:
-    build: ./api-gateway
+    build: 
+      context: .
+      dockerfile: api-gateway/Dockerfile
     environment:
       - TZ=Europe/Warsaw
     # ports:
@@ -27,11 +29,14 @@ services:
       - product-service
       - order-service
     restart: always
-    
+    volumes:
+      - ./shared:/shared:ro
 
   # User Service
   user-service:
-    build: ./user-service
+    build: 
+      context: .
+      dockerfile: user-service/Dockerfile
     ports:
       - "3001:3001"
     environment:
@@ -46,7 +51,8 @@ services:
     depends_on:
       - user-db
     restart: always
-
+    volumes:
+      - ./shared:/shared:ro
   # User Database (PostgreSQL)
   user-db:
     image: postgres:14-alpine
@@ -66,7 +72,9 @@ services:
 
   # Product Service
   product-service:
-    build: ./product-service
+    build:
+      context: . 
+      dockerfile: product-service/Dockerfile
     ports:
       - "${PORT_PRODUCT}:${PORT_PRODUCT}"
     environment:
@@ -79,7 +87,8 @@ services:
     depends_on:
       - product-db
     restart: always
-
+    volumes:
+      - ./shared:/shared:ro
   # Product Database (MongoDB)
   product-db:
     image: mongo:6-jammy
@@ -95,7 +104,9 @@ services:
 
   # Order Service
   order-service:
-    build: ./order-service
+    build:
+      context: .  
+      dockerfile: order-service/Dockerfile
     ports:
       - ${PORT_ORDER}:${PORT_ORDER}
     environment:
@@ -107,7 +118,8 @@ services:
     depends_on:
       - order-db
     restart: always
-
+    volumes:
+      - ./shared:/shared:ro
   # Order Database (MongoDB)
   order-db:
     image: mongo:6-jammy

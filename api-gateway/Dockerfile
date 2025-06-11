@@ -1,30 +1,26 @@
-# Bazowy obraz
 FROM node:18-alpine
 
-# Instalacja globalna dla nodemon dla wygodniejszego developmentu
+# Instalacja globalna dla nodemon
 RUN npm install -g nodemon
 
 # Ustawienie katalogu roboczego
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Kopiowanie plików package.json i package-lock.json
-COPY package*.json ./
+# Skopiuj shared logger (bez instalacji dependencies)
+COPY shared/logger /shared/logger
 
-# Instalacja zależności
+# Zainstaluj dependencies głównej aplikacji (tu jest winston)
+COPY api-gateway/package*.json ./
 RUN npm install
 
-# Kopiowanie kodu źródłowego
-COPY . .
+# Kopiuj kod aplikacji api-gateway
+COPY api-gateway/ .
 
 # Utworzenie katalogu na logi
 RUN mkdir -p logs
 
-# Ustawienie zmiennych środowiskowych
 ENV NODE_ENV=development
 ENV PORT=8080
 
-# Ekspozycja portu
 EXPOSE 8080
-
-# Uruchomienie aplikacji
 CMD ["node", "index.js"]

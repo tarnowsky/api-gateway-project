@@ -10,20 +10,9 @@ const client = require('prom-client');
 dotenv.config();
 
 // Setup logger
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'product-service' },
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' })
-  ]
-});
-
+// Usuń starą konfigurację winston i zastąp:
+const { createLogger } = require('/shared/logger');
+const logger = createLogger(winston, 'product-service');
 // Initialize Express app
 const app = express();
 const register = new client.Registry();
