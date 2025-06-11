@@ -6,7 +6,8 @@ const logger = require('../config/logger');
 class AuthService {
     async register(userData) {
         const { username, email, password } = userData;
-        
+    
+    try {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
         
@@ -21,6 +22,13 @@ class AuthService {
             message: 'User registered successfully',
             userId: user.id,
         };
+    } catch (error) {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            const field = error.errors[0].path; // 'username' lub 'email'
+            throw new Error(`${field} already exists`);
+        }
+        throw error;
+    }
     }
     
     async login(credentials) {

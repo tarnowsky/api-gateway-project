@@ -129,7 +129,9 @@ app.get('/orders/health', (req, res) => {
 app.post('/orders', authenticateToken, async (req, res) => {
   try {
     const { items, shippingAddress, paymentInfo } = req.body;
+    // Generate a unique userId from the authenticated user
     const userId = req.user.id;
+
 
     //? Calculate total amount
     const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -174,7 +176,8 @@ app.get('/orders/:id', authenticateToken, async (req, res) => {
     }
 
     //? Check if the order belong to the requesting user
-    if (order.userId !== req.user.id) {
+    if (order.userId !== String(req.user.id)) {
+      logger.error(`order: ${order.userId} user: ${req.user.id}`);
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -202,7 +205,8 @@ app.patch('/orders/:id/status', authenticateToken, async (req, res) => {
 
     //? Check if the order belongs to the requesting user
     if (order.userId !== String(req.user.id)) {
-      return res.status(403).json({ message: 'Access denied' });
+      logger.error(`order: ${order.userId} user: ${req.user.id}`);
+      return res.status(403).json({ message: `Access denied` });
     }
 
     order.status = status;
@@ -226,7 +230,7 @@ app.delete('/orders/:id', authenticateToken, async (req, res) => {
     }
 
     //? Check if the order belongs to the requesting user
-    if (order.userId !== req.user.id) {
+    if (order.userId !== String(req.user.id)) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -251,7 +255,7 @@ app.delete('/orders/:id', authenticateToken, async (req, res) => {
 //? Get order statistics
 app.get('/orders/stats/summary', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = String(req.user.id);
 
     //? Get total number of orders
     const totalOrders = await Order.countDocuments({ userId });

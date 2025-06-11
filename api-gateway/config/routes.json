@@ -70,22 +70,6 @@
             "forwardPath": null
         },
         {
-            "path": "/products/metrics/stats",
-            "service": "product-service",
-            "methods": ["GET", "PUT", "DELETE"],
-            "auth": false,
-            "rateLimit": true,
-            "forwardPath": null
-        },
-        {
-            "path": "/products/dashboard",
-            "service": "product-service",
-            "methods": ["GET", "PUT", "DELETE"],
-            "auth": false,
-            "rateLimit": true,
-            "forwardPath": null
-        },
-        {
             "path": "/orders",
             "service": "order-service",
             "methods": ["POST", "GET"],
@@ -99,7 +83,7 @@
             "methods": ["GET", "DELETE"],
             "auth": true,
             "rateLimit": true,
-            "forwardPath": "/orders"
+            "forwardPath": null
         },
         {
             "path": "/orders/:id/status",

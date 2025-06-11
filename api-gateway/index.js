@@ -35,7 +35,7 @@ const METRICS_PORT = process.env.METRICS_PORT || 9876;
 app.use(express.json())
 app.use(helmet()); // Zabezpieczenia HTTP
 app.use(requestLogger); // Logowanie żądań
-// app.use(corsMiddleware);
+app.use(corsMiddleware);
 
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -138,7 +138,7 @@ metrics.startServiceHealthCheck(gatewayConfig.services);
 
 app.use(metrics.metricsMiddleware);
 
-app.get('/health', (req, res) => {
+app.get('/health', rateLimiterMiddleware, (req, res) => {
   res.status(200).json({
     status: 'up',
     timestamp: new Date().toISOString()

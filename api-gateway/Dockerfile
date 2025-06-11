@@ -20,7 +20,7 @@ COPY . .
 RUN mkdir -p logs
 
 # Ustawienie zmiennych środowiskowych
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 ENV PORT=8080
 
 # Ekspozycja portu

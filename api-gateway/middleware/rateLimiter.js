@@ -6,17 +6,16 @@ const gatewayConfig = require('../config/gateway.config.json');
 const metrics = require('../utils/metrics');
 
 const rateLimiterMiddleware = rateLimit({
-  windowMs: process.env.RATE_LIMIT_WINDOW_MS || gatewayConfig.rateLimit.windowMs || 15 * 60 * 1000, // 15 minut domyślnie
-  max: process.env.RATE_LIMIT_MAX || gatewayConfig.rateLimit.max || 100, // limit 100 żądań na windowMs domyślnie
-  standardHeaders: true, // Zwraca nagłówki `RateLimit-*` w odpowiedzi
-  legacyHeaders: false, // Wyłącza nagłówki `X-RateLimit-*`
+  windowMs: process.env.RATE_LIMIT_WINDOW_MS || gatewayConfig.rateLimit.windowMs || 15 * 60 * 1000, 
+  max: process.env.RATE_LIMIT_MAX || gatewayConfig.rateLimit.max || 100, 
+  standardHeaders: true, 
+  legacyHeaders: false,
   message: {
     status: 'error',
     message: 'Zbyt wiele żądań z tego adresu IP, spróbuj ponownie później'
   },
-  // Funkcja określająca klucz dla limitu (domyślnie IP)
   keyGenerator: (req) => {
-    // Można zmienić sposób identyfikacji klienta, np. na podstawie tokenu API
+    // Could be changed for Token or smth
     return req.ip;
   },
   // handler for when rate limit is exceeded
@@ -28,7 +27,7 @@ const rateLimiterMiddleware = rateLimit({
     
     res.status(429).json({
       status: 'error',
-      message: 'Zbyt wiele żądań z tego adresu IP, spróbuj ponownie później'
+      message: 'Too many requests from this IP address, please try again later'
     });
   }
 });
