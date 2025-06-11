@@ -10,6 +10,7 @@ const helmet = require('helmet');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 // Importy własnych middleware
+const corsMiddleware = require('./middleware/cors');
 const authMiddleware = require('./middleware/auth');
 const rateLimiterMiddleware = require('./middleware/rateLimiter');
 const requestLogger = require('./middleware/requestLogger');
@@ -34,6 +35,7 @@ const METRICS_PORT = process.env.METRICS_PORT || 9876;
 app.use(express.json())
 app.use(helmet()); // Zabezpieczenia HTTP
 app.use(requestLogger); // Logowanie żądań
+// app.use(corsMiddleware);
 
 
 app.use(express.static(path.join(__dirname, 'public')));

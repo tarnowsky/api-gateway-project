@@ -47,6 +47,8 @@ services:
   # User Database (PostgreSQL)
   user-db:
     image: postgres:14-alpine
+    ports:
+      - "5432:5432"
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
@@ -75,6 +77,8 @@ services:
   # Product Database (MongoDB)
   product-db:
     image: mongo:6-jammy
+    ports:
+      - "27018:27017"
     volumes:
       - product-db-data:/data/db
     networks:
@@ -99,6 +103,8 @@ services:
   # Order Database (MongoDB)
   order-db:
     image: mongo:6-jammy
+    ports:
+      - "27017:27017"
     volumes:
       - order-db-data:/data/db
     networks:
