@@ -1,0 +1,7 @@
+cluster.name: "microservices-cluster"
+network.host: 0.0.0.0
+discovery.type: single-node
+xpack.security.enabled: false
+xpack.monitoring.collection.enabled: true
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs

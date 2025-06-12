@@ -1,13 +1,20 @@
 function createLogger(winston, serviceName, options = {}) {
-  const { combine, timestamp, printf, colorize } = winston.format;
+  const { combine, timestamp, printf, json } = winston.format;
 
-  const myFormat = printf(({ level, message, timestamp, service }) => {
+  // Format dla ELK - czyste JSON
+  const elkFormat = combine(
+    timestamp(),
+    json()
+  );
+
+  // Format dla konsoli (development)
+  const consoleFormat = printf(({ level, message, timestamp, service }) => {
     return `${timestamp} [${level}] [${service}]: ${message}`;
   });
 
   const logger = winston.createLogger({
     level: process.env.LOG_LEVEL || options.level || 'info',
-    format: combine(timestamp(), myFormat),
+    format: elkFormat, // JSON dla plików
     defaultMeta: { service: serviceName },
     transports: [
       new winston.transports.File({ 
@@ -24,9 +31,14 @@ function createLogger(winston, serviceName, options = {}) {
     ]
   });
 
+  // Console transport z czytelnym formatem
   if (process.env.NODE_ENV !== 'production') {
     logger.add(new winston.transports.Console({
-      format: combine(colorize(), timestamp(), myFormat)
+      format: combine(
+        winston.format.colorize(),
+        timestamp(),
+        consoleFormat
+      )
     }));
   }
 

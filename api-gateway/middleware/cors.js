@@ -2,9 +2,11 @@
  * Middleware do konfiguracji CORS
  */
 const cors = require('cors');
+const logger = require('../utils/logger');
 
 const corsMiddleware = (req, res, next) => {
-    if (req.headers['x-test-cors'] === 'true') {
+  if (req.headers['x-test-cors'] === 'true') {
+    logger.error(`CORS Error: Access blocked by CORS policy - Authorization header not allowed`);
     return res.status(403).json({
       error: 'CORS Error',
       message: 'Access blocked by CORS policy - Authorization header not allowed',
