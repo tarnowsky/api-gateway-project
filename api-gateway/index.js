@@ -29,16 +29,23 @@ const app = express();
 const PORT = process.env.PORT || gatewayConfig.server.port || 8080;
 // Port dla metryk Prometheus
 const METRICS_PORT = process.env.METRICS_PORT || 9876;
+const instanceId = process.env.INSTANCE_ID || '1';
 
 
 // Middleware podstawowe
 app.use(express.json())
 app.use(helmet()); // Zabezpieczenia HTTP
-app.use(requestLogger); // Logowanie żądań
 app.use(corsMiddleware);
+app.use(requestLogger); // Logowanie żądań
 
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((req, res, next) => {
+    req.instanceId = instanceId;
+    res.set('X-Instance-ID', instanceId);
+    next();
+});
 
 app.get('/test', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'test.html'));
@@ -141,6 +148,7 @@ app.use(metrics.metricsMiddleware);
 app.get('/health', rateLimiterMiddleware, (req, res) => {
   res.status(200).json({
     status: 'up',
+    instance: instanceId,
     timestamp: new Date().toISOString()
   });
 });
